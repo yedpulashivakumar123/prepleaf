@@ -9,7 +9,7 @@ The project is useful for individuals who want to:
  2.Challenge themselves by typing words from different categories.
  3.Compete with others and see where they stand on the leaderboard.
  
-# terminal-based maze solver 
+# Terminal-Based Maze Solver 
 **Project Description:**
 The Terminal-Based Maze Solver is a Python program that generates random mazes, visualizes them in the terminal, and offers the functionality to find a path from the start to the end of the maze.
 
