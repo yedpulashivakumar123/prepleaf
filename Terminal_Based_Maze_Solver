@@ -1,55 +1,48 @@
 import random
 import os
+import heapq
 
-# ANSI color codes
-RED = '\033[91m'
-BLUE = '\033[94m'
-GREEN = '\033[92m'
-ENDC = '\033[0m'
+# ANSI color codes (same as in your code)
+# ...
 
-# Constants
-WALL = RED + '▓' + ENDC
-OPEN_SPACE = BLUE + '◌' + ENDC
-START = GREEN + 'S' + ENDC
-END = GREEN + 'E' + ENDC
-PATH = GREEN + '◍' + ENDC
+# Maze class (unchanged)
 
-# Maze class
-class Maze:
-    def __init__(self, size, wall_percentage):
-        self.size = size
-        self.wall_percentage = wall_percentage
-        self.maze = self.generate_maze()
+# A* pathfinding algorithm
+def heuristic(node, goal):
+    x1, y1 = node
+    x2, y2 = goal
+    return abs(x1 - x2) + abs(y1 - y2)
 
-    def generate_maze(self):
-        maze = [[WALL if random.random() < self.wall_percentage else OPEN_SPACE for _ in range(self.size)] for _ in range(self.size)]
-        maze[0][0] = START
-        maze[self.size - 1][self.size - 1] = END
-        return maze
+def find_path_a_star(maze, start, end):
+    open_list = [(0, start)]
+    came_from = {}
+    g_score = {cell: float('inf') for row in maze for cell in row}
+    g_score[start] = 0
 
-    def print_maze(self):
-        os.system('cls' if os.name == 'nt' else 'clear')
-        for row in self.maze:
-            print(' '.join(row))
+    while open_list:
+        current_cost, current = heapq.heappop(open_list)
 
-# DFS pathfinding algorithm
-def find_path(maze, x, y):
-    if x < 0 or x >= len(maze) or y < 0 or y >= len(maze):
-        return False
+        if current == end:
+            path = []
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            return path[::-1]
 
-    if maze[x][y] == END:
-        return True
+        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            x, y = current
+            neighbor = (x + dx, y + dy)
 
-    if maze[x][y] != OPEN_SPACE:
-        return False
+            if 0 <= neighbor[0] < len(maze) and 0 <= neighbor[1] < len(maze[0]) and maze[neighbor[0]][neighbor[1]] == OPEN_SPACE:
+                tentative_g_score = g_score[current] + 1
 
-    maze[x][y] = PATH
+                if tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score = tentative_g_score + heuristic(neighbor, end)
+                    heapq.heappush(open_list, (f_score, neighbor))
 
-    if find_path(maze, x + 1, y) or find_path(maze, x - 1, y) or find_path(maze, x, y + 1) or find_path(maze, x, y - 1):
-        return True
-
-    maze[x][y] = OPEN_SPACE
-    return False
+    return None
 
 # Main function
 def main():
@@ -62,11 +55,15 @@ def main():
         maze = Maze(size, wall_percentage)
         maze.print_maze()
 
-        choice = input("Options:\n1. Print Path\n2. Generate Another Maze\n3. Exit\nEnter your choice: ")
+        choice = input("Options:\n1. Print Path (A*)\n2. Generate Another Maze\n3. Exit\nEnter your choice: ")
 
         if choice == '1':
-            maze_copy = [row[:] for row in maze.maze]  # Create a copy of the maze
-            if find_path(maze_copy, 0, 0):
+            start = (0, 0)
+            end = (size - 1, size - 1)
+            path = find_path_a_star(maze.maze, start, end)
+            if path:
+                for x, y in path:
+                    maze.maze[x][y] = PATH
                 maze.print_maze()
             else:
                 print("No path found.")
